@@ -1,0 +1,81 @@
+import requests
+
+class StockPortfolio:
+    def __init__(self):
+        self.stocks = {}
+
+    def add_stock(self, symbol):
+        if symbol.upper() in self.stocks:
+            print(f"{symbol} is already in the portfolio.")
+            return
+
+        self.stocks[symbol.upper()] = {}
+
+    def remove_stock(self, symbol):
+        if symbol.upper() not in self.stocks:
+            print(f"{symbol} is not in the portfolio.")
+            return
+
+        del self.stocks[symbol.upper()]
+        print(f"{symbol} removed from the portfolio.")
+
+    def update_portfolio(self):
+        for symbol in self.stocks.keys():
+            self.stocks[symbol] = self.get_stock_data(symbol)
+
+    def get_stock_data(self, symbol):
+        api_key = '4JJQHU9HA9U7BMGH'  
+        url = f'https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol={symbol}&apikey={api_key}'
+        response = requests.get(url)
+        data = response.json()
+
+        if 'Global Quote' in data:
+            stock_data = data['Global Quote']
+            return {
+                'symbol': stock_data['01. symbol'],
+                'price': float(stock_data['05. price']),
+                'change': float(stock_data['09. change']),
+                'change_percent': float(stock_data['10. change percent'].replace('%', '')),
+                'last_refreshed': stock_data['07. latest trading day']
+            }
+        else:
+            print(f"Failed to fetch data for {symbol}.")
+            return {}
+
+    def display_portfolio(self):
+        print("Stock Portfolio:")
+        for symbol, data in self.stocks.items():
+            print(f"Symbol: {data['symbol']}, Price: {data['price']}, Change: {data['change']} ({data['change_percent']}%), Last Refreshed: {data['last_refreshed']}")
+
+def main():
+    portfolio = StockPortfolio()
+
+    while True:
+        print("\nMenu:")
+        print("1. Add Stock")
+        print("2. Remove Stock")
+        print("3. Update Portfolio")
+        print("4. Display Portfolio")
+        print("5. Exit")
+
+        choice = input("Enter your choice: ")
+
+        if choice == '1':
+            symbol = input("Enter stock symbol to add: ")
+            portfolio.add_stock(symbol)
+        elif choice == '2':
+            symbol = input("Enter stock symbol to remove: ")
+            portfolio.remove_stock(symbol)
+        elif choice == '3':
+            portfolio.update_portfolio()
+            print("Portfolio updated.")
+        elif choice == '4':
+            portfolio.display_portfolio()
+        elif choice == '5':
+            print("Exiting program.")
+            break
+        else:
+            print("Invalid choice. Please try again.")
+
+if __name__ == "__main__":
+    main()
